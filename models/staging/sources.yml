@@ -1,0 +1,203 @@
+sources:
+  # Production Schema Tables
+  - name: raw
+    description: raw_data schema - contains source transactional data
+    database: "bike_store_dwh"
+    schema: raw
+    tables:
+      - name: categories
+        description: Product categories (Children Bicycles, Comfort Bicycles, etc.)
+        columns:
+          - name: category_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: category_name
+            tests:
+              - not_null
+              
+      - name: brands
+        description: Bike brands (Electra, Haro, Trek, etc.)
+        identifier: brands
+        columns:
+          - name: brand_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: brand_name
+            tests:
+              - not_null
+              
+      - name: products
+        description: Product catalog with pricing
+        identifier: products
+        columns:
+          - name: product_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: product_name
+            tests:
+              - not_null
+          - name: brand_id
+            tests:
+              - not_null
+              - relationships:
+                  to: source('raw', 'brands')
+                  field: brand_id
+          - name: category_id
+            tests:
+              - not_null
+              - relationships:
+                  to: source('production', 'categories')
+                  field: category_id
+          - name: model_year
+            tests:
+              - not_null
+          - name: list_price
+            tests:
+              - not_null
+              
+      
+      - name: stores
+        description: Retail store locations (Santa Cruz, Baldwin, Rowlett)
+        identifier: stores
+        columns:
+          - name: store_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: store_name
+            tests:
+              - not_null
+          - name: phone
+          - name: email
+          - name: street
+          - name: city
+          - name: state
+          - name: zip_code
+              
+      - name: staffs
+        description: Store staff members and hierarchy
+        identifier: staffs
+        columns:
+          - name: staff_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: first_name
+            tests:
+              - not_null
+          - name: last_name
+            tests:
+              - not_null
+          - name: email
+            tests:
+              - unique
+              - not_null
+          - name: phone
+          - name: active
+            description: Staff status (0=inactive, 1=active)
+          - name: store_id
+            tests:
+              - not_null
+          - name: manager_id
+            description: Self-referencing foreign key to staff_id
+              
+      - name: customers
+        description: Customer information
+        identifier: customers
+        columns:
+          - name: customer_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: first_name
+            tests:
+              - not_null
+          - name: last_name
+            tests:
+              - not_null
+          - name: phone
+          - name: email
+            tests:
+              - not_null
+          - name: street
+          - name: city
+          - name: state
+          - name: zip_code
+      - name: stocks
+        description: Product inventory by store
+        identifier: stocks
+        columns:
+          - name: store_id
+            tests:
+              - not_null
+          - name: product_id
+            tests:
+              - not_null
+          - name: quantity
+            description: Available quantity in stock
+  
+              
+      - name: orders
+        description: Sales order headers
+        identifier: orders
+        columns:
+          - name: order_id
+            description: Primary key
+            tests:
+              - unique
+              - not_null
+          - name: customer_id
+            tests:
+              - not_null
+          - name: order_status
+            description: 1=Pending, 2=Processing, 3=Rejected, 4=Completed
+            tests:
+              - not_null
+              - accepted_values:
+                  values: [1, 2, 3, 4]
+          - name: order_date
+            tests:
+              - not_null
+          - name: required_date
+            tests:
+              - not_null
+          - name: shipped_date
+          - name: store_id
+            tests:
+              - not_null
+          - name: staff_id
+            tests:
+              - not_null
+              
+      - name: order_items
+        description: Order line items
+        identifier: order_items
+        columns:
+          - name: order_id
+            tests:
+              - not_null
+          - name: item_id
+            tests:
+              - not_null
+          - name: product_id
+            tests:
+              - not_null
+          - name: quantity
+            tests:
+              - not_null
+          - name: list_price
+            tests:
+              - not_null
+          - name: discount
+            description: Discount rate (0.00 to 1.00)
+            tests:
+              - not_null
